@@ -243,10 +243,6 @@ public class MQClientInstance {
                     log.info("the client factory [{}] start OK", this.clientId);
                     this.serviceState = ServiceState.RUNNING;
                     break;
-                case RUNNING:
-                    break;
-                case SHUTDOWN_ALREADY:
-                    break;
                 case START_FAILED:
                     throw new MQClientException("The Factory object[" + this.getClientId() + "] has been created before, and failed.", null);
                 default:
@@ -674,10 +670,13 @@ public class MQClientInstance {
                     } else {
                         log.warn("updateTopicRouteInfoFromNameServer, getTopicRouteInfoFromNameServer return null, Topic: {}", topic);
                     }
-                } catch (Exception e) {
+                } catch (MQClientException e) {
                     if (!topic.startsWith(MixAll.RETRY_GROUP_TOPIC_PREFIX) && !topic.equals(MixAll.AUTO_CREATE_TOPIC_KEY_TOPIC)) {
                         log.warn("updateTopicRouteInfoFromNameServer Exception", e);
                     }
+                } catch (RemotingException e) {
+                    log.error("updateTopicRouteInfoFromNameServer Exception", e);
+                    throw new IllegalStateException(e);
                 } finally {
                     this.lockNamesrv.unlock();
                 }
@@ -743,8 +742,8 @@ public class MQClientInstance {
     }
 
     /**
-     * This method will be removed in the version 5.0.0,because filterServer was removed,and method <code>subscribe(final String topic, final MessageSelector messageSelector)</code>
-     * is recommended.
+     * This method will be removed in the version 5.0.0,because filterServer was removed,and method
+     * <code>subscribe(final String topic, final MessageSelector messageSelector)</code> is recommended.
      */
     @Deprecated
     private void uploadFilterClassToAllFilterServer(final String consumerGroup, final String fullClassName,
